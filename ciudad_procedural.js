@@ -4,6 +4,7 @@
   const marginBlock = 5;
   const blockSeparation = 5;
   const blockSize = 60;
+  const skySize = 3000;
  //Create the Three.js WebGL renderer
   
   var renderer = new THREE.WebGLRenderer();
@@ -18,7 +19,7 @@
   // This camera will provide a perspective projection
   // Arguments are (fov, aspect, near_plane, far_plane)
   
-  var camera = new THREE.PerspectiveCamera(70, 1024/768, 0.1, 1200);
+  var camera = new THREE.PerspectiveCamera(70, 1024/768, 0.1, 6000);
   var camera2 = new THREE.OrthographicCamera(-1024/2 , 1024/2, 768/2, -768/2, 0.1, 1200);
 
 	// Create the controller to move camera with mouse
@@ -69,18 +70,25 @@
 		
   }
     
+
+  {
+    const near = 1300;
+    const far = 1500;
+    scene.fog = new THREE.Fog( 0x0c1210, near, far);
+  }
+
   var geometry = new THREE.BoxGeometry( blockSize, 5, blockSize );
   //var geometry = new THREE.CylinderGeometry( 100, 100, 300, 32, 1);
   //geometry.computeFaceNormals();
   //geometry.computeVertexNormals();
-  var material = new THREE.MeshLambertMaterial( {color: controls.colormesh} );
+  var material = new THREE.MeshLambertMaterial( {color: 0x8c8181} );
 	var caja = new THREE.Mesh(geometry, material);
 	
 	
   var block_coordinates = [];
   
-  for (var i = -4; i < 5; i++){
-    for (var j = -4; j < 5; j++) {
+  for (var i = -8; i < 9; i++){
+    for (var j = -8; j < 9; j++) {
         var geom2 = geometry.clone();
         var mesh2 = new THREE.Mesh(geom2, material);
         mesh2.position.set(j*80, 0, i*80);
@@ -94,8 +102,9 @@
 
 
 //************************************************************************************************************************************************************** 
-  var map_geometry = new THREE.BoxGeometry(720,20,720);
-  var map_material = new THREE.MeshLambertMaterial({color:0x00ff00});
+  var map_geometry = new THREE.BoxGeometry(3000,20,3000);
+  var map_texture = new THREE.TextureLoader().load("road.jpg");
+  var map_material = new THREE.MeshLambertMaterial({ map: map_texture });
   var map = new THREE.Mesh(map_geometry, map_material);
   map.position.set(0,-10,0);
   scene.add(map);
@@ -117,15 +126,15 @@
   }
 
   function generateTexture() {
-    // build a small canvas 32x64 and paint it in white
+
     var canvas  = document.createElement( 'canvas' );
     canvas.width = 32;
     canvas.height    = 64;
     var context = canvas.getContext( '2d' );
-    // plain it in white
+
     context.fillStyle    = '#ffffff';
     context.fillRect( 0, 0, 32, 64 );
-    // draw the window rows - with a small noise to simulate light variations in each room
+
     for( var y = 2; y < 64; y += 2 ){
         for( var x = 0; x < 32; x += 2 ){
             var value   = Math.floor( Math.random() * 64 );
@@ -134,13 +143,30 @@
         }
     }
 
+    var canvas2 = document.createElement( 'canvas' );
+    canvas2.width    = 512;
+    canvas2.height   = 1024;
+    var context = canvas2.getContext( '2d' );
+
+    context.imageSmoothingEnabled        = false;
+    context.webkitImageSmoothingEnabled  = false;
+    context.mozImageSmoothingEnabled = false;
+
+    context.drawImage( canvas, 0, 0, canvas2.width, canvas2.height );
+
+    return canvas2;
+
   }
   
 
   function newBlockCenter(center){
     var rnd = Math.random()*0.42;
-    console.log("prop: "+rnd);
+    //console.log("prop: "+rnd);
     return [Math.floor(center[0] + ((blockSize/2) * rnd)), Math.floor(center[1] + ((blockSize/2) * rnd))];
+  }
+
+  function randomHeight(){
+    return Math.floor(Math.random()*100+100);
   }
 
   function getQuadrantArea(center,ncenter,quadrant,subDivisions){
@@ -201,6 +227,18 @@
     }
   }
 
+  function changeUVMapping(geometry){
+    geometry.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 0.5, 0 ) );
+   // geometry.faces.splice( 3, 1 );
+    geometry.faceVertexUvs[0][4][0].set( 0, 0 );
+    geometry.faceVertexUvs[0][4][1].set( 0, 0 );
+    geometry.faceVertexUvs[0][4][2].set( 0, 0 );
+    geometry.faceVertexUvs[0][5][0].set( 0, 0 );
+    geometry.faceVertexUvs[0][5][1].set( 0, 0 );
+    geometry.faceVertexUvs[0][5][2].set( 0, 0 );
+   // geometry.faceVertexUvs[0][2][3].set( 0, 0 );
+  }
+
   function generatesBuldings(coords){
     var subDivisions = getSubdivisions();
     //var g_material = new THREE.MeshLambertMaterial({color:0x888888});
@@ -219,41 +257,53 @@
     if( subDivisions == 1){
       //var g_material_1 = new THREE.MeshLambertMaterial({color:0x888fff});
       g_geometry = new THREE.BoxGeometry(blockSize - marginBlock ,70 ,blockSize - marginBlock);
+      changeUVMapping(g_geometry);
       g = new THREE.Mesh(g_geometry, g_material);
-      g.position.set(coords[0], 0, coords[1]);
+      g.position.set(coords[0], blockSize/2, coords[1]);
       scene.add(g);
+     // console.log(g_geometry.faceVertexUvs[0][3][2]);
     }else{
-      //if(subDivisions==3)
+
       var newCenter = newBlockCenter(coords);
       var area;
-      //if(subDivisions==3)
+
       for(var i = 1; i<subDivisions+1; i++){
         area = getQuadrantArea(coords, newCenter, i, subDivisions);
-        console.log("area: "+area.width+ " "+ area.depth);
-        g_geometry = new THREE.BoxGeometry(area.width - marginBlock -5, 100, area.depth - marginBlock - 5);
-        if(subDivisions==3 && i ==2){
-          g_geometry = new THREE.BoxGeometry(area.width - marginBlock - 5, 150, area.depth - marginBlock - 5);
-          var g_material_2 = new THREE.MeshLambertMaterial({color:0x558fff});
-          g = new THREE.Mesh(g_geometry, g_material_2);
-        }else if(subDivisions==3 && i ==3){
-          g_geometry = new THREE.BoxGeometry(area.width - marginBlock -5, 150, area.depth - marginBlock - 5);
-          var g_material_2 = new THREE.MeshLambertMaterial({color:0x444fff});
-          g = new THREE.Mesh(g_geometry, g_material_2);
-        }else
+        //console.log("area: "+area.width+ " "+ area.depth);
+        g_geometry = new THREE.BoxGeometry(area.width - marginBlock -5, randomHeight(), area.depth - marginBlock - 5);
+        changeUVMapping(g_geometry);
         g = new THREE.Mesh(g_geometry, g_material);
         setBuildingPosition(g, newCenter, i, subDivisions, coords);
         scene.add(g);
-        console.log(g.position);
+       // console.log(g.position);
         
       
       }
-      if(subDivisions == 2)
-        console.log("centro: "+ coords + " nuevo centro: "+ newCenter + " subdivisiones: " + subDivisions);
+      // if(subDivisions == 2)
+      //   console.log("centro: "+ coords + " nuevo centro: "+ newCenter + " subdivisiones: " + subDivisions);
       
     }
   }
 
-  
+  var urls = ["posx.jpg", "negx.jpg", "posy.jpg", "negy.jpg", "posz.jpg", "negz.jpg"];
+  //var urls = ["pisapx.png", "pisanx.png", "pisapy.png", "pisany.png", "pisapz.png", "pisanz.png"];
+	
+  var textureCube = new THREE.CubeTextureLoader().load( urls );
+	
+  var shader = THREE.ShaderLib[ "cube" ];
+  shader.uniforms[ "tCube" ].value = textureCube;
+
+  var material = new THREE.ShaderMaterial( {
+					fragmentShader: shader.fragmentShader,
+					vertexShader: shader.vertexShader,
+					uniforms: shader.uniforms,
+					depthWrite: false,
+					side: THREE.BackSide
+				} );
+
+   skycube = new THREE.Mesh( new THREE.BoxGeometry( skySize, skySize, skySize ), material );
+		skycube.position.set(0,500,0);		
+    scene.add( skycube );
 
   for(var i=0; i<block_coordinates.length; i++){
     generatesBuldings(block_coordinates.pop());
@@ -314,7 +364,21 @@
 		controls.cameraz = camera.position.z;
 		controls.cameraz_prev = camera.position.z;
 		controlz.updateDisplay();
-	}
+	}if(camera.position.y < 20){
+    camera.position.y = 20;
+  }
+  
+  if(camera.position.y > 900 ){
+    camera.position.y = 900;   
+  }
+
+  if(camera.position.x > 900 ){
+    camera.position.x = 900;  
+  }
+
+  if(camera.position.z > 900 ){
+    camera.position.z = 900; 
+  }
 		
 		// Animation loop
 		requestAnimationFrame( render );
