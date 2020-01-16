@@ -27,10 +27,7 @@
   var mouseControls = new THREE.TrackballControls(camera, renderer.domElement);
   mouseControls.staticMoving = true;
   mouseControls.dynamicDampingFactor = 0.3; 
-	
-	
-  var axes = new THREE.AxisHelper( 500 );
-  scene.add(axes);  
+
   
 	var controls = new function(){
 	  this.camerax = 200;
@@ -161,7 +158,6 @@
 
   function newBlockCenter(center){
     var rnd = Math.random()*0.42;
-    //console.log("prop: "+rnd);
     return [Math.floor(center[0] + ((blockSize/2) * rnd)), Math.floor(center[1] + ((blockSize/2) * rnd))];
   }
 
@@ -229,19 +225,16 @@
 
   function changeUVMapping(geometry){
     geometry.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 0.5, 0 ) );
-   // geometry.faces.splice( 3, 1 );
     geometry.faceVertexUvs[0][4][0].set( 0, 0 );
     geometry.faceVertexUvs[0][4][1].set( 0, 0 );
     geometry.faceVertexUvs[0][4][2].set( 0, 0 );
     geometry.faceVertexUvs[0][5][0].set( 0, 0 );
     geometry.faceVertexUvs[0][5][1].set( 0, 0 );
     geometry.faceVertexUvs[0][5][2].set( 0, 0 );
-   // geometry.faceVertexUvs[0][2][3].set( 0, 0 );
   }
 
   function generatesBuldings(coords){
     var subDivisions = getSubdivisions();
-    //var g_material = new THREE.MeshLambertMaterial({color:0x888888});
     var g_geometry;
 
     var texture       = new THREE.Texture( generateTexture() );
@@ -255,38 +248,27 @@
     });
 
     if( subDivisions == 1){
-      //var g_material_1 = new THREE.MeshLambertMaterial({color:0x888fff});
       g_geometry = new THREE.BoxGeometry(blockSize - marginBlock ,70 ,blockSize - marginBlock);
       changeUVMapping(g_geometry);
       g = new THREE.Mesh(g_geometry, g_material);
       g.position.set(coords[0], blockSize/2, coords[1]);
       scene.add(g);
-     // console.log(g_geometry.faceVertexUvs[0][3][2]);
     }else{
-
       var newCenter = newBlockCenter(coords);
       var area;
 
       for(var i = 1; i<subDivisions+1; i++){
         area = getQuadrantArea(coords, newCenter, i, subDivisions);
-        //console.log("area: "+area.width+ " "+ area.depth);
         g_geometry = new THREE.BoxGeometry(area.width - marginBlock -5, randomHeight(), area.depth - marginBlock - 5);
         changeUVMapping(g_geometry);
         g = new THREE.Mesh(g_geometry, g_material);
         setBuildingPosition(g, newCenter, i, subDivisions, coords);
-        scene.add(g);
-       // console.log(g.position);
-        
-      
+        scene.add(g);   
       }
-      // if(subDivisions == 2)
-      //   console.log("centro: "+ coords + " nuevo centro: "+ newCenter + " subdivisiones: " + subDivisions);
-      
     }
   }
 
   var urls = ["posx.jpg", "negx.jpg", "posy.jpg", "negy.jpg", "posz.jpg", "negz.jpg"];
-  //var urls = ["pisapx.png", "pisanx.png", "pisapy.png", "pisany.png", "pisapz.png", "pisanz.png"];
 	
   var textureCube = new THREE.CubeTextureLoader().load( urls );
 	
@@ -312,10 +294,11 @@
 //*************************************************************************************************************************************** */
   var light_point = new THREE.PointLight(controls.colorlight, 1);
 	var sunMat = new THREE.MeshBasicMaterial({color: 'yellow'});
-  var sunGeom = new THREE.SphereGeometry(10, 16, 8);
+  var sunGeom = new THREE.SphereGeometry(0, 0, 0);
   sun = new THREE.Mesh(sunGeom, sunMat);
 	sun.add(light_point);	
   sun.position.set(controls.poslight_x, controls.poslight_y, controls.poslight_z);
+  sun.material.visible=false;
 	scene.add(sun);
 	
 	camera.position.set(controls.camerax, controls.cameray, controls.cameraz);
