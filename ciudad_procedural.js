@@ -23,10 +23,13 @@
   var camera2 = new THREE.OrthographicCamera(-1024/2 , 1024/2, 768/2, -768/2, 0.1, 1200);
 
 	// Create the controller to move camera with mouse
+	var mouseControls = new THREE.OrbitControls( camera, renderer.domElement );
+	mouseControls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+	mouseControls.dampingFactor = 0.4;
 
-  var mouseControls = new THREE.TrackballControls(camera, renderer.domElement);
-  mouseControls.staticMoving = true;
-  mouseControls.dynamicDampingFactor = 0.3; 
+	mouseControls.screenSpacePanning = false;
+
+	mouseControls.maxPolarAngle = Math.PI / 2;
 
   
 	var controls = new function(){
