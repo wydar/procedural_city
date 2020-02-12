@@ -4,7 +4,8 @@
   const marginBlock = 5;
   const blockSeparation = 5;
   const blockSize = 60;
-  const skySize = 3000;
+  const skySize = 2000;
+  const blockNum = 11;
  //Create the Three.js WebGL renderer
   
   var renderer = new THREE.WebGLRenderer();
@@ -74,7 +75,7 @@
   {
     const near = 1300;
     const far = 1500;
-    scene.fog = new THREE.Fog( 0x0c1210, near, far);
+    scene.fog = new THREE.Fog( 0xab9579, near, far);
   }
 
   var geometry = new THREE.BoxGeometry( blockSize, 5, blockSize );
@@ -87,8 +88,8 @@
 	
   var block_coordinates = [];
   
-  for (var i = -8; i < 9; i++){
-    for (var j = -8; j < 9; j++) {
+  for (var i = -blockNum; i < blockNum+1; i++){
+    for (var j = -blockNum ; j < blockNum+1; j++) {
         var geom2 = geometry.clone();
         var mesh2 = new THREE.Mesh(geom2, material);
         mesh2.position.set(j*80, 0, i*80);
@@ -102,9 +103,9 @@
 
 
 //************************************************************************************************************************************************************** 
-  var map_geometry = new THREE.BoxGeometry(3000,20,3000);
+  var map_geometry = new THREE.BoxGeometry(2000,20,2000);
   var map_texture = new THREE.TextureLoader().load("road.jpg");
-  var map_material = new THREE.MeshLambertMaterial({ map: map_texture });
+  var map_material = new THREE.MeshLambertMaterial();
   var map = new THREE.Mesh(map_geometry, map_material);
   map.position.set(0,-10,0);
   scene.add(map);
@@ -271,7 +272,7 @@
     }
   }
 
-  var urls = ["posx.jpg", "negx.jpg", "posy.jpg", "negy.jpg", "posz.jpg", "negz.jpg"];
+  var urls = ["px.jpg", "nx.jpg", "py.jpg", "ny.jpg", "pz.jpg", "nz.jpg"];
 	
   var textureCube = new THREE.CubeTextureLoader().load( urls );
 	
@@ -286,9 +287,9 @@
 					side: THREE.BackSide
 				} );
 
-   skycube = new THREE.Mesh( new THREE.BoxGeometry( skySize, skySize, skySize ), material );
-		skycube.position.set(0,500,0);		
-    scene.add( skycube );
+  skycube = new THREE.Mesh( new THREE.BoxGeometry( skySize, skySize, skySize ), material );
+	skycube.position.set(0,-100,0);		
+  scene.add( skycube );
 
   for(var i=0; i<block_coordinates.length; i++){
     generatesBuldings(block_coordinates.pop());
@@ -302,7 +303,10 @@
 	sun.add(light_point);	
   sun.position.set(controls.poslight_x, controls.poslight_y, controls.poslight_z);
   sun.material.visible=false;
-	scene.add(sun);
+  scene.add(sun);
+  
+  var light = new THREE.AmbientLight( 0x404040 ); // soft white light
+  scene.add( light );
 	
 	camera.position.set(controls.camerax, controls.cameray, controls.cameraz);
 	camera2.position.set(controls.camerax, controls.cameray, controls.cameraz);
@@ -354,16 +358,29 @@
     camera.position.y = 20;
   }
   
-  if(camera.position.y > 900 ){
-    camera.position.y = 900;   
+  if(camera.position.y > 500 ){
+    camera.position.y = 500;   
   }
 
-  if(camera.position.x > 900 ){
-    camera.position.x = 900;  
+  if(camera.position.y < -500 ){
+    camera.position.y = -500;   
   }
 
-  if(camera.position.z > 900 ){
-    camera.position.z = 900; 
+
+  if(camera.position.x > 500 ){
+    camera.position.x = 500;  
+  }
+
+  if(camera.position.x < -500 ){
+    camera.position.x = -500;  
+  }
+
+  if(camera.position.z > 500 ){
+    camera.position.z = 500; 
+  }
+
+  if(camera.position.z < -500 ){
+    camera.position.z = -500; 
   }
 		
 		// Animation loop
